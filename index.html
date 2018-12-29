@@ -8,32 +8,41 @@
     <link href="//fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"></script>
-	<style>
-		body {
-    display: flex;
-    min-height: 100vh;
-    flex-direction: column;
-    background-image: url("./images/background.png");
-    background-size: auto;
-}
-main {
-    flex: 1 0 auto;
-}
-main .container {
-    width: 80%;
-    margin-top: 5%;
-}
-nav {
-    height: 150px;
-}
-.nav-wrapper a {
-    height: 150px;
-}
-	</style>
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+            background-image: url("./images/background.png");
+            background-size: auto;
+        }
 
+        main {
+            flex: 1 0 auto;
+        }
+
+        main .container {
+            width: 80%;
+            margin-top: 5%;
+        }
+
+        nav {
+            height: 150px;
+        }
+
+        .nav-wrapper a {
+            height: 150px;
+        }
+    </style>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://apis.google.com/js/api.js">
+        handleClientLoad();
+    </script>
     <script>
         var GoogleAuth;
         var SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+
         function handleClientLoad() {
             // Load the API's client and auth2 modules.
             // Call the initClient function after the modules load.
@@ -65,10 +74,10 @@ nav {
 
                 // Call handleAuthClick function when user clicks on
                 //      "Sign In/Authorize" button.
-                $('#sign-in-or-out-button').click(function() {
+                $('#sign-in-or-out-button').click(function () {
                     handleAuthClick();
                 });
-                $('#revoke-access-button').click(function() {
+                $('#revoke-access-button').click(function () {
                     revokeAccess();
                 });
             });
@@ -109,16 +118,88 @@ nav {
         }
     </script>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <script async defer src="https://apis.google.com/js/api.js"
-            onload="this.onload=function(){};handleClientLoad()"
-            onreadystatechange="if (this.readyState === 'complete') this.onload()">
+    <script>
+        var fileName = 'config.json';
+
+        function getConfigId(callback) {
+            var listFunc = gapi.client.drive.files.list({
+                'spaces': 'appDataFolder',
+                'fields': 'files(id, name)'
+            });
+
+            listFunc.execute(function (response) {
+                console.log(response);
+                if (response.files.length > 0) {
+                    callback(response.files[0].id);
+                } else {
+                    callback();
+                }
+            });
+        }
+
+        function createConfig(callback) {
+            var createFunt = gapi.client.drive.files.create({
+                'resource': {'name': fileName, 'parents': ['appDataFolder']},
+                'fields': 'id'
+            });
+            console.log('create config...');
+            createFunt.execute(function (response) {
+                console.log(response);
+                callback(response.id);
+            });
+        }
+
+        function getConfig(id, callback) {
+            var getFunt = gapi.client.drive.files.get({
+                'fileId': id,
+                'alt': 'media'
+            });
+            getFunt.execute(function (response) {
+                console.log(response);
+                callback(response.result);
+            });
+        }
+
+        function uploadConfig(id, jsonStr, callback) {
+            var req = gapi.client.request({
+                'path': '/upload/drive/v3/files/' + id,
+                'method': 'PATCH',
+                'params': {'uploadType': 'media'},
+                'body': jsonStr
+            });
+            req.execute(function (response) {
+                console.log(response);
+                callback();
+            });
+        }
+
+        function prepareConfig(callback) {
+            getConfigId(function (id) {
+                if (!id) {
+                    createConfig(function (id2) {
+                        callback(id2);
+                    });
+                } else {
+                    console.log('config existed!');
+                    callback(id);
+                }
+            });
+        }
+
+        function test() {
+            prepareConfig(function (id) {
+                uploadConfig(id, {'aaaa': 'test', 'date': new Date().getTime()}, function () {
+                    getConfig(function (data) {
+                        console.log(data);
+                    })
+                });
+            });
+        }
     </script>
 </head>
 
 
-
-<body class="grey lighten-5" >
+<body class="grey lighten-5">
 
 <header>
     <nav class="top-nav brown lighten-3 z-depth-1">
@@ -135,7 +216,8 @@ nav {
 
             <button id="sign-in-or-out-button" style="margin-left: 25px">Sign In/Authorize</button>
             <button id="revoke-access-button" style="display: none; margin-left: 25px">Revoke access</button>
-            <div id="auth-status" style="display: inline; padding-left: 25px"></div><hr>
+            <div id="auth-status" style="display: inline; padding-left: 25px"></div>
+            <hr>
 
         </div>
     </div>
