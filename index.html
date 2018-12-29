@@ -114,6 +114,7 @@
         function updateSigninStatus(isSignedIn) {
             setSigninStatus();
         }
+
         handleClientLoad();
     </script>
 
@@ -188,9 +189,9 @@
         function test() {
             prepareConfig(function (id) {
                 uploadConfig(id, {'aaaa': 'test', 'date': new Date().getTime()}, function () {
-                    getConfig(function (data) {
+                    getConfig(id, function (data) {
                         console.log(data);
-                    })
+                    });
                 });
             });
         }
