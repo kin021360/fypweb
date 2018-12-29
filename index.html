@@ -167,6 +167,7 @@
                 'params': {'uploadType': 'media'},
                 'body': jsonStr
             });
+            console.log('upload config...');
             req.execute(function (response) {
                 console.log(response);
                 callback();
