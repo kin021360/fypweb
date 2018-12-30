@@ -223,14 +223,14 @@
         }
 
         function setPubPri() {
-            getConfig(id, function (data) {
+            getConfig(configFileId, function (data) {
                 console.log(data);
                 pubBase64 = data.publicKey;
                 priBase64 = data.secretKey;
             });
         }
 
-        function test() {
+        function callPrepare() {
             prepareConfig(function (id) {
                 if (!id) {
                     let keyPair = createKeyPair();
