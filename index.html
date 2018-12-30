@@ -120,7 +120,9 @@
     </script>
 
     <script>
-        var fileName = 'config.json';
+        let fileName = 'config.json';
+        let configFileId;
+        let pubBase64, priBase64;
 
         function getConfigId(callback) {
             var listFunc = gapi.client.drive.files.list({
@@ -156,7 +158,7 @@
                 'alt': 'media'
             });
             getFunt.execute(function (response) {
-                console.log(response);
+                // console.log(response);
                 callback(response.result);
             });
         }
@@ -188,6 +190,14 @@
             });
         }
 
+        function TextToUint8Array(str) {
+            return new TextEncoder("utf-8").encode(str);
+        }
+
+        function Uint8ArrayToText(uint8Arr) {
+            return new TextDecoder("utf-8").decode(uint8Arr);
+        }
+
         function Uint8ArrayToBase64(uint8Arr) {
             return btoa(uint8Arr);
         }
@@ -199,19 +209,41 @@
         function createKeyPair() {
             return nacl.sign.keyPair();
         }
-        
+
+        function signSignature(message, secretKey) {
+            let msg = message;
+            let sKey = secretKey;
+            if (typeof (message) == 'string') {
+                msg = TextToUint8Array(message);
+            }
+            if (typeof (secretKey) == 'string') {
+                sKey = Base64ToUint8Array(secretKey);
+            }
+            return nacl.sign.detached(msg, sKey);
+        }
+
+        function setPubPri() {
+            getConfig(id, function (data) {
+                console.log(data);
+                pubBase64 = data.publicKey;
+                priBase64 = data.secretKey;
+            });
+        }
+
         function test() {
             prepareConfig(function (id) {
-                let keyPair = createKeyPair();
-                uploadConfig(id, {
-                    'publicKey': Uint8ArrayToBase64(keyPair.publicKey),
-                    'secretKey': Uint8ArrayToBase64(keyPair.secretKey),
-                    'date': new Date().getTime()
-                }, function () {
-                    // getConfig(id, function (data) {
-                    //     console.log(data);
-                    // });
-                });
+                if (!id) {
+                    let keyPair = createKeyPair();
+                    uploadConfig(id, {
+                        'publicKey': Uint8ArrayToBase64(keyPair.publicKey),
+                        'secretKey': Uint8ArrayToBase64(keyPair.secretKey),
+                        'date': new Date().getTime()
+                    }, function () {
+
+                    })
+                } else {
+                    configFileId = id;
+                }
             });
         }
     </script>
