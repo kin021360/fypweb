@@ -9,8 +9,6 @@
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.0/nacl-fast.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/buffer@5.2.1/index.min.js"></script>
     <style>
         body {
             display: flex;
@@ -190,12 +188,29 @@
             });
         }
 
+        function Uint8ArrayToBase64(uint8Arr) {
+            return btoa(uint8Arr);
+        }
+
+        function Base64ToUint8Array(base64Str) {
+            return new Uint8Array(JSON.parse('[' + atob(base64Str) + ']'));
+        }
+
+        function createKeyPair() {
+            return nacl.sign.keyPair();
+        }
+        
         function test() {
             prepareConfig(function (id) {
-                uploadConfig(id, {'aaaa': 'test', 'date': new Date().getTime()}, function () {
-                    getConfig(id, function (data) {
-                        console.log(data);
-                    });
+                let keyPair = createKeyPair();
+                uploadConfig(id, {
+                    'publicKey': Uint8ArrayToBase64(keyPair.publicKey),
+                    'secretKey': Uint8ArrayToBase64(keyPair.secretKey),
+                    'date': new Date().getTime()
+                }, function () {
+                    // getConfig(id, function (data) {
+                    //     console.log(data);
+                    // });
                 });
             });
         }
